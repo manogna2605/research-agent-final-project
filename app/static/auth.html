@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>research-agent :: login</title>
+<link rel="icon" href="data:,"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --void:#060907;--bg-terminal:#0a120d;--bg-pane:#08100c;--bg-input:#0d1a13;
+  --green-bright:#43ffa4;--green-mid:#34c886;--green-dim:#2c7a57;--green-line:#163826;
+  --amber:#ffb454;--red-err:#ff6b6b;--paper:#cfe9da;--muted:#5d8a72;
+  --font-d:'Space Mono',monospace;--font-b:'JetBrains Mono',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%;background:var(--void);color:var(--paper);font-family:var(--font-b)}
+#rain{position:fixed;inset:0;z-index:0;opacity:.45;pointer-events:none}
+.page{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px}
+.motd{text-align:center;margin-bottom:28px}
+.motd__title{font-family:var(--font-d);font-weight:700;font-size:clamp(22px,5vw,36px);letter-spacing:5px;color:var(--green-bright);text-shadow:0 0 18px rgba(67,255,164,.35)}
+.motd__rule{font-size:12px;color:var(--green-line);letter-spacing:-1px;overflow:hidden;white-space:nowrap;margin:6px 0}
+.motd__tag{font-size:12px;color:var(--muted);letter-spacing:.5px}
+.terminal{background:var(--bg-terminal);border:1px solid var(--green-line);border-radius:6px;box-shadow:0 30px 80px -30px rgba(0,0,0,.8);width:100%;max-width:460px;overflow:hidden}
+.titlebar{display:flex;align-items:center;gap:8px;padding:10px 14px;background:#0d1812;border-bottom:1px solid var(--green-line)}
+.dot{width:11px;height:11px;border-radius:50%;opacity:.85}
+.dot--r{background:#ff5f56}.dot--y{background:#ffbd2e}.dot--g{background:#27c93f}
+.ttxt{margin-left:8px;font-size:12px;color:var(--muted)}
+.tabs{display:flex;border-bottom:1px solid var(--green-line)}
+.tab{flex:1;padding:12px;background:transparent;border:none;color:var(--muted);font-family:var(--font-b);font-size:13px;cursor:pointer;transition:color .15s,background .15s}
+.tab:not(:last-child){border-right:1px solid var(--green-line)}
+.tab.active{color:var(--green-bright);background:rgba(67,255,164,.06);box-shadow:inset 0 -2px 0 var(--green-bright)}
+.tab:hover:not(.active){color:var(--green-mid)}
+.pane{padding:22px;display:none}
+.pane.active{display:block}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;color:var(--muted);letter-spacing:1px;margin-bottom:5px}
+.field input{width:100%;background:var(--bg-input);border:1px solid var(--green-line);color:var(--paper);font-family:var(--font-b);font-size:13px;padding:10px 12px;border-radius:4px;outline:none;transition:border-color .2s}
+.field input:focus{border-color:var(--green-mid)}
+.field input::placeholder{color:var(--muted);font-size:12px}
+.submit-btn{width:100%;padding:12px;margin-top:6px;background:var(--green-dim);border:1px solid var(--green-bright);border-radius:4px;color:#04140b;font-family:var(--font-d);font-weight:700;font-size:13px;letter-spacing:1px;cursor:pointer;transition:background .2s}
+.submit-btn:hover{background:var(--green-bright)}
+.submit-btn:disabled{opacity:.5;cursor:not-allowed}
+.log-area{margin-top:12px;font-size:12px;min-height:18px;line-height:1.5}
+.log-area .err{color:var(--red-err)}
+.log-area .ok{color:var(--green-bright)}
+.footer{margin-top:20px;font-size:11px;color:var(--green-line);text-align:center}
+</style>
+</head>
+<body>
+<canvas id="rain"></canvas>
+<div class="page">
+  <div class="motd">
+    <div class="motd__rule">══════════════════════════════════</div>
+    <div class="motd__title">RESEARCH AGENT</div>
+    <div class="motd__tag">multi-tool reasoning engine // oracle · rag · arxiv · web</div>
+    <div class="motd__rule">══════════════════════════════════</div>
+  </div>
+  <div class="terminal">
+    <div class="titlebar">
+      <span class="dot dot--r"></span><span class="dot dot--y"></span><span class="dot dot--g"></span>
+      <span class="ttxt">research-agent — auth</span>
+    </div>
+    <div class="tabs">
+      <button class="tab active" id="tab-login" onclick="switchTab('login')">$ login</button>
+      <button class="tab" id="tab-register" onclick="switchTab('register')">$ register</button>
+    </div>
+    <!-- LOGIN -->
+    <div class="pane active" id="pane-login">
+      <div class="field"><label>EMAIL</label><input type="email" id="l-email" placeholder="you@example.com" autocomplete="email"/></div>
+      <div class="field"><label>PASSWORD</label><input type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password"/></div>
+      <button class="submit-btn" id="login-btn" onclick="doLogin()">login ▸</button>
+      <div class="log-area" id="login-log"></div>
+    </div>
+    <!-- REGISTER -->
+    <div class="pane" id="pane-register">
+      <div class="field"><label>USERNAME</label><input type="text" id="r-user" placeholder="your name" autocomplete="username"/></div>
+      <div class="field"><label>EMAIL</label><input type="email" id="r-email" placeholder="you@example.com" autocomplete="email"/></div>
+      <div class="field"><label>PASSWORD (min 8 characters)</label><input type="password" id="r-pass" placeholder="••••••••" autocomplete="new-password"/></div>
+      <div class="field"><label>CONFIRM PASSWORD</label><input type="password" id="r-confirm" placeholder="••••••••" autocomplete="new-password"/></div>
+      <button class="submit-btn" id="reg-btn" onclick="doRegister()">create account ▸</button>
+      <div class="log-area" id="reg-log"></div>
+    </div>
+  </div>
+  <div class="footer">self-hosted · your api keys, your data</div>
+</div>
+<script>
+if (localStorage.getItem('token')) window.location.href = '/';
+
+function switchTab(t) {
+  document.getElementById('tab-login').classList.toggle('active', t==='login');
+  document.getElementById('tab-register').classList.toggle('active', t==='register');
+  document.getElementById('pane-login').classList.toggle('active', t==='login');
+  document.getElementById('pane-register').classList.toggle('active', t==='register');
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key !== 'Enter') return;
+  if (document.getElementById('pane-login').classList.contains('active')) doLogin();
+  else doRegister();
+});
+
+async function doLogin() {
+  var email = document.getElementById('l-email').value.trim();
+  var pass  = document.getElementById('l-pass').value;
+  var log   = document.getElementById('login-log');
+  var btn   = document.getElementById('login-btn');
+  if (!email || !pass) { log.innerHTML = '<span class="err">[error] fill in all fields</span>'; return; }
+  btn.disabled = true;
+  log.innerHTML = '<span>[login] authenticating...</span>';
+  try {
+    var res  = await fetch('/api/auth/login', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email:email, password:pass})});
+    var data = await res.json();
+    if (!res.ok) { log.innerHTML = '<span class="err">[error] ' + (data.detail||'login failed') + '</span>'; btn.disabled=false; return; }
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('username', data.username);
+    log.innerHTML = '<span class="ok">[ok] welcome back, ' + data.username + ' — redirecting...</span>';
+    var meRes = await fetch('/api/auth/me', {headers:{'Authorization':'Bearer '+data.token}});
+    var me    = await meRes.json();
+    setTimeout(function() { window.location.href = me.has_keys ? '/' : '/setup'; }, 800);
+  } catch(e) { log.innerHTML = '<span class="err">[error] could not reach server</span>'; btn.disabled=false; }
+}
+
+async function doRegister() {
+  var user    = document.getElementById('r-user').value.trim();
+  var email   = document.getElementById('r-email').value.trim();
+  var pass    = document.getElementById('r-pass').value;
+  var confirm = document.getElementById('r-confirm').value;
+  var log     = document.getElementById('reg-log');
+  var btn     = document.getElementById('reg-btn');
+  if (!user||!email||!pass||!confirm) { log.innerHTML='<span class="err">[error] fill in all fields</span>'; return; }
+  if (pass !== confirm) { log.innerHTML='<span class="err">[error] passwords do not match</span>'; return; }
+  if (pass.length < 8)  { log.innerHTML='<span class="err">[error] password must be at least 8 characters</span>'; return; }
+  btn.disabled = true;
+  log.innerHTML = '<span>[register] creating account...</span>';
+  try {
+    var res  = await fetch('/api/auth/register', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({username:user, email:email, password:pass})});
+    var data = await res.json();
+    if (!res.ok) { log.innerHTML='<span class="err">[error] '+(data.detail||'registration failed')+'</span>'; btn.disabled=false; return; }
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('username', data.username);
+    log.innerHTML = '<span class="ok">[ok] account created — setting up your api keys...</span>';
+    setTimeout(function() { window.location.href='/setup'; }, 800);
+  } catch(e) { log.innerHTML='<span class="err">[error] could not reach server</span>'; btn.disabled=false; }
+}
+
+// matrix rain
+(function(){
+  var canvas=document.getElementById('rain'), ctx=canvas.getContext('2d');
+  var chars='01アルゴリズムRAGORACLE{}</>=', fs=14, cols, drops;
+  function resize(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;cols=Math.floor(canvas.width/fs);drops=Array.from({length:cols},function(){return Math.random()*(-canvas.height/fs);});}
+  window.addEventListener('resize',resize); resize();
+  var frame=0;
+  function draw(){frame++;if(frame%3===0){ctx.fillStyle='rgba(6,9,7,0.16)';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.font=fs+'px monospace';for(var i=0;i<cols;i++){var ch=chars[Math.floor(Math.random()*chars.length)];ctx.fillStyle=Math.random()>.94?'#cfe9da':'#1f6b46';ctx.fillText(ch,i*fs,drops[i]*fs);if(drops[i]*fs>canvas.height&&Math.random()>.985)drops[i]=0;drops[i]++;}}requestAnimationFrame(draw);}
+  if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches) draw();
+})();
+</script>
+</body>
+</html>

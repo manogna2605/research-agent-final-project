@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>research-agent :: terminal</title>
+<link rel="icon" href="data:," />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/static/styles.css?v=4" />
+</head>
+<body>
+
+<canvas id="rain" aria-hidden="true"></canvas>
+
+<main class="page">
+
+  <header class="motd">
+    <pre class="motd__rule">═══════════════════════════════════════════════════════</pre>
+    <h1 class="motd__title">RESEARCH AGENT</h1>
+    <p class="motd__tag">multi-tool reasoning engine // oracle · rag-search · arxiv · web</p>
+    <pre class="motd__rule">═══════════════════════════════════════════════════════</pre>
+  </header>
+
+  <section class="terminal" id="terminal">
+
+    <div class="terminal__titlebar">
+      <span class="dot dot--r"></span><span class="dot dot--y"></span><span class="dot dot--g"></span>
+      <span class="terminal__titletext">research-agent — zsh — 120×40</span>
+      <span style="flex:1"></span>
+      <span class="user-chip">
+        <span id="nav-username" style="color:var(--green-mid);font-size:12px"></span>
+        <button class="nav-btn" onclick="window.location.href='/setup'" title="API Settings">⚙ settings</button>
+        <button class="nav-btn nav-btn--out" onclick="logout()" title="Logout">logout</button>
+      </span>
+    </div>
+
+    <nav class="tabs" role="tablist">
+      <button class="tab is-active" data-pane="research" role="tab" aria-selected="true">$ research</button>
+      <button class="tab" data-pane="admin" role="tab" aria-selected="false">$ admin / knowledge-base</button>
+    </nav>
+
+    <!-- RESEARCH PANE -->
+    <section class="pane is-active" id="pane-research" role="tabpanel">
+      <form class="prompt-line" id="researchForm" autocomplete="off" novalidate>
+        <span class="prompt-line__prefix">research@oracle:~$</span>
+        <input class="prompt-line__input" id="researchInput" type="text"
+          placeholder="ask a research question, e.g. 'what is dynamic backtracking in LLM agents?'" maxlength="500" />
+        <button class="run-btn" id="researchRunBtn" type="submit">run ▸</button>
+      </form>
+      <p class="hint">press enter or click run · the oracle picks rag-search, arxiv, web search, or a mix, then compiles a report</p>
+      <div class="log" id="researchLog"></div>
+    </section>
+
+    <!-- ADMIN PANE -->
+    <section class="pane" id="pane-admin" role="tabpanel" hidden>
+      <p class="kb-stats" id="kbStats">knowledge base: <span class="kb-stats__value">checking…</span></p>
+      <form class="prompt-line" id="ingestForm" autocomplete="off" novalidate>
+        <span class="prompt-line__prefix">admin@ingest:~$</span>
+        <input class="prompt-line__input" id="ingestQuery" type="text"
+          placeholder="arxiv query — e.g. 'cat:cs.AI', 'au:hinton', or a bare phrase like 'agentic reasoning'" maxlength="200" />
+        <span class="prompt-line__flag">--max</span>
+        <input class="prompt-line__number" id="ingestMax" type="number" min="1" max="50" value="20" />
+        <button class="run-btn" id="ingestRunBtn" type="submit">ingest ▸</button>
+      </form>
+      <p class="hint">press enter or click ingest (max 50 per run) · bare phrases auto-prefixed as all:phrase · use ti:/au:/cat: to narrow</p>
+      <div class="log" id="ingestLog"></div>
+    </section>
+
+  </section>
+
+  <footer class="page__footer">
+    <p>self-hosted · your api keys, your data ·
+      <a href="/setup">settings</a> ·
+      <a href="https://github.com" target="_blank" rel="noopener">view source</a>
+    </p>
+  </footer>
+
+</main>
+
+<script src="/static/app.js?v=4"></script>
+</body>
+</html>

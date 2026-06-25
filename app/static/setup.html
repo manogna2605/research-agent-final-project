@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>research-agent :: api setup</title>
+<link rel="icon" href="data:,"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --void:#060907;--bg-terminal:#0a120d;--bg-pane:#08100c;--bg-input:#0d1a13;
+  --green-bright:#43ffa4;--green-mid:#34c886;--green-dim:#2c7a57;--green-line:#163826;
+  --amber:#ffb454;--red-err:#ff6b6b;--paper:#cfe9da;--muted:#5d8a72;
+  --font-d:'Space Mono',monospace;--font-b:'JetBrains Mono',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%;background:var(--void);color:var(--paper);font-family:var(--font-b)}
+.page{max-width:620px;margin:0 auto;padding:48px 20px 80px}
+.back{font-size:12px;color:var(--muted);cursor:pointer;margin-bottom:32px;display:inline-block;transition:color .2s;border:none;background:none;font-family:var(--font-b)}
+.back:hover{color:var(--green-bright)}
+.motd{margin-bottom:28px}
+.motd__title{font-family:var(--font-d);font-weight:700;font-size:26px;letter-spacing:4px;color:var(--green-bright);text-shadow:0 0 18px rgba(67,255,164,.3)}
+.motd__tag{font-size:12px;color:var(--muted);margin-top:6px}
+.terminal{background:var(--bg-terminal);border:1px solid var(--green-line);border-radius:6px;overflow:hidden}
+.titlebar{display:flex;align-items:center;gap:8px;padding:10px 14px;background:#0d1812;border-bottom:1px solid var(--green-line)}
+.dot{width:11px;height:11px;border-radius:50%}.dot--r{background:#ff5f56}.dot--y{background:#ffbd2e}.dot--g{background:#27c93f}
+.ttxt{margin-left:8px;font-size:12px;color:var(--muted)}
+.pane{padding:22px}
+.user-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding:10px 12px;background:rgba(67,255,164,.04);border:1px solid var(--green-line);border-radius:4px}
+.user-name{font-size:12px;color:var(--green-mid)}
+.slabel{font-size:11px;color:var(--green-dim);letter-spacing:2px;margin:22px 0 16px}
+.slabel:first-of-type{margin-top:0}
+.field{margin-bottom:16px}
+.field-header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:5px;gap:8px;flex-wrap:wrap}
+.field label{font-size:11px;color:var(--muted);letter-spacing:1px}
+.field-note{font-size:11px;color:var(--green-dim)}
+.field-note a{color:var(--green-mid);text-decoration:none;border-bottom:1px dotted var(--green-dim)}
+.field-note a:hover{color:var(--green-bright)}
+.field input{width:100%;background:var(--bg-input);border:1px solid var(--green-line);color:var(--paper);font-family:var(--font-b);font-size:13px;padding:10px 12px;border-radius:4px;outline:none;transition:border-color .2s}
+.field input:focus{border-color:var(--green-mid)}
+.field input::placeholder{color:var(--muted);font-size:12px}
+.field-hint{font-size:11px;color:var(--muted);margin-top:5px;line-height:1.5}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.badge{font-size:10px;padding:2px 7px;border-radius:3px;margin-left:6px}
+.badge--req{color:var(--red-err);border:1px solid rgba(255,107,107,.4)}
+.badge--opt{color:var(--amber);border:1px solid rgba(255,180,84,.4)}
+.divider{height:1px;background:var(--green-line);margin:20px 0}
+.save-btn{width:100%;padding:13px;background:var(--green-dim);border:1px solid var(--green-bright);border-radius:4px;color:#04140b;font-family:var(--font-d);font-weight:700;font-size:13px;letter-spacing:1px;cursor:pointer;transition:background .2s}
+.save-btn:hover{background:var(--green-bright)}
+.save-btn:disabled{opacity:.5;cursor:not-allowed}
+.action-row{display:flex;gap:12px;margin-top:14px}
+.ghost-btn{flex:1;padding:10px;background:transparent;border:1px solid var(--green-line);border-radius:4px;color:var(--muted);font-family:var(--font-b);font-size:12px;cursor:pointer;transition:border-color .2s,color .2s}
+.ghost-btn:hover{border-color:var(--red-err);color:var(--red-err)}
+.logout-btn{padding:10px 18px;background:transparent;border:1px solid var(--green-line);border-radius:4px;color:var(--muted);font-family:var(--font-b);font-size:12px;cursor:pointer;transition:border-color .2s,color .2s}
+.logout-btn:hover{border-color:var(--amber);color:var(--amber)}
+.log-area{margin-top:14px;font-size:12px;min-height:18px;line-height:1.5}
+.log-area .err{color:var(--red-err)}
+.log-area .ok{color:var(--green-bright)}
+</style>
+</head>
+<body>
+<div class="page">
+  <button class="back" onclick="window.location.href='/'">← back to research agent</button>
+  <div class="motd">
+    <div class="motd__title">API SETUP</div>
+    <div class="motd__tag">keys are stored in the database per account — never shared, never logged</div>
+  </div>
+  <div class="terminal">
+    <div class="titlebar">
+      <span class="dot dot--r"></span><span class="dot dot--y"></span><span class="dot dot--g"></span>
+      <span class="ttxt">research-agent — settings</span>
+    </div>
+    <div class="pane">
+      <div class="user-row">
+        <span class="user-name">logged in as <span id="uname">...</span></span>
+        <button class="logout-btn" onclick="logout()">logout</button>
+      </div>
+
+      <!-- REQUIRED -->
+      <div class="slabel">// REQUIRED</div>
+
+      <div class="field">
+        <div class="field-header">
+          <label>OPENAI API KEY <span class="badge badge--req">required</span></label>
+          <span class="field-note"><a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com/api-keys ↗</a></span>
+        </div>
+        <input type="password" id="openai-key" placeholder="sk-proj-..." autocomplete="off"/>
+        <div class="field-hint">Powers GPT-4o (oracle) + text-embedding-3-small (RAG embeddings)</div>
+      </div>
+
+      <div class="field">
+        <div class="field-header">
+          <label>PINECONE API KEY <span class="badge badge--req">required</span></label>
+          <span class="field-note"><a href="https://app.pinecone.io" target="_blank">app.pinecone.io → API Keys ↗</a></span>
+        </div>
+        <input type="password" id="pinecone-key" placeholder="pcsk_..." autocomplete="off"/>
+        <div class="field-hint">Vector database for storing and searching paper embeddings</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- OPTIONAL -->
+      <div class="slabel">// OPTIONAL</div>
+
+      <div class="field">
+        <div class="field-header">
+          <label>SERPAPI KEY <span class="badge badge--opt">optional</span></label>
+          <span class="field-note"><a href="https://serpapi.com/dashboard" target="_blank">serpapi.com → Dashboard ↗</a></span>
+        </div>
+        <input type="password" id="serpapi-key" placeholder="leave blank to disable web search" autocomplete="off"/>
+        <div class="field-hint">Enables web_search tool. The agent still works via RAG + ArXiv without it.</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- PINECONE CONFIG -->
+      <div class="slabel">// PINECONE INDEX CONFIG</div>
+
+      <div class="field">
+        <label>INDEX NAME</label>
+        <input type="text" id="pinecone-index" value="langgraph-research-agent" autocomplete="off"/>
+        <div class="field-hint">Name of the Pinecone index to create/use. Keep the default unless you already have one.</div>
+      </div>
+
+      <div class="grid2">
+        <div class="field">
+          <label>CLOUD</label>
+          <input type="text" id="pinecone-cloud" value="aws" placeholder="aws" autocomplete="off"/>
+          <div class="field-hint">aws · gcp · azure</div>
+        </div>
+        <div class="field">
+          <label>REGION</label>
+          <input type="text" id="pinecone-region" value="us-east-1" placeholder="us-east-1" autocomplete="off"/>
+          <div class="field-hint">e.g. us-east-1</div>
+        </div>
+      </div>
+
+      <button class="save-btn" id="save-btn" onclick="saveKeys()">save keys ▸</button>
+      <div class="log-area" id="setup-log"></div>
+
+      <div class="action-row">
+        <button class="ghost-btn" onclick="resetKeys()">clear / reset all keys</button>
+        <button class="logout-btn" onclick="logout()">logout</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var token = localStorage.getItem('token');
+if (!token) { window.location.href = '/auth'; }
+
+document.getElementById('uname').textContent = localStorage.getItem('username') || '...';
+
+// Load masked status of existing keys
+(async function() {
+  try {
+    var res = await fetch('/api/auth/me', {headers:{'Authorization':'Bearer '+token}});
+    if (res.status === 401) { window.location.href='/auth'; return; }
+    var me = await res.json();
+    document.getElementById('uname').textContent = me.username;
+    if (me.keys_status.openai)   document.getElementById('openai-key').placeholder   = '••••••• (already set — enter new value to change)';
+    if (me.keys_status.pinecone) document.getElementById('pinecone-key').placeholder = '••••••• (already set — enter new value to change)';
+    if (me.keys_status.serpapi)  document.getElementById('serpapi-key').placeholder  = '••••••• (already set — enter new value to change)';
+  } catch(e) {}
+})();
+
+async function saveKeys() {
+  var openai   = document.getElementById('openai-key').value.trim();
+  var pinecone = document.getElementById('pinecone-key').value.trim();
+  var serpapi  = document.getElementById('serpapi-key').value.trim();
+  var idx      = document.getElementById('pinecone-index').value.trim()  || 'langgraph-research-agent';
+  var cloud    = document.getElementById('pinecone-cloud').value.trim()  || 'aws';
+  var region   = document.getElementById('pinecone-region').value.trim() || 'us-east-1';
+  var log      = document.getElementById('setup-log');
+  var btn      = document.getElementById('save-btn');
+
+  if (!openai && !pinecone) {
+    log.innerHTML = '<span class="err">[error] OpenAI and Pinecone keys are required</span>';
+    return;
+  }
+  btn.disabled = true;
+  log.innerHTML = '<span>[setup] saving...</span>';
+  try {
+    var res = await fetch('/api/auth/keys', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body: JSON.stringify({openai_key:openai, pinecone_key:pinecone, serpapi_key:serpapi,
+                            pinecone_index:idx, pinecone_cloud:cloud, pinecone_region:region})
+    });
+    if (res.status === 401) { window.location.href='/auth'; return; }
+    if (!res.ok) {
+      var d = await res.json();
+      log.innerHTML = '<span class="err">[error] '+(d.detail||'failed to save')+'</span>';
+      btn.disabled = false; return;
+    }
+    log.innerHTML = '<span class="ok">[ok] keys saved — redirecting...</span>';
+    setTimeout(function() { window.location.href='/'; }, 900);
+  } catch(e) {
+    log.innerHTML = '<span class="err">[error] could not reach server</span>';
+    btn.disabled = false;
+  }
+}
+
+async function resetKeys() {
+  if (!confirm('Clear all your API keys? You will need to re-enter them to use the agent.')) return;
+  var log = document.getElementById('setup-log');
+  try {
+    var res = await fetch('/api/auth/keys', {method:'DELETE', headers:{'Authorization':'Bearer '+token}});
+    if (res.status === 401) { window.location.href='/auth'; return; }
+    log.innerHTML = '<span class="ok">[ok] keys cleared</span>';
+    ['openai-key','pinecone-key','serpapi-key'].forEach(function(id) {
+      var el = document.getElementById(id);
+      el.value = ''; el.placeholder = el.id === 'serpapi-key' ? 'leave blank to disable web search' : '';
+    });
+    if (!document.getElementById('openai-key').placeholder)   document.getElementById('openai-key').placeholder   = 'sk-proj-...';
+    if (!document.getElementById('pinecone-key').placeholder) document.getElementById('pinecone-key').placeholder = 'pcsk_...';
+  } catch(e) { log.innerHTML = '<span class="err">[error] reset failed</span>'; }
+}
+
+function logout() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('username');
+  window.location.href = '/auth';
+}
+</script>
+</body>
+</html>
